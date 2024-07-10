@@ -79,6 +79,12 @@ def check_hash(id, sample_dict):
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset_dir', type=str, default='.',
                     help='Path to directory containing samples.json')
+parser.add_argument('--skip_integrity_check', action='store_true',
+                    help='Skip the integrity check for the samples')
+parser.add_argument('--skip_yt_download', action='store_true', 
+                    help='do not download youtube videos')
+parser.add_argument('--skip_selfcollected', action='store_true',
+                    help='do not download langebro and vester sogade data')
 
 if __name__ == '__main__':
     args = parser.parse_args()
@@ -101,22 +107,24 @@ if __name__ == '__main__':
     print(dataset)
 
     # Download langebro/vestersogade samples
-    if not all([os.path.exists(x) for x in dataset.match_tags(['langebro', 
-                                                               'vester_sogade'])]):
-        download_with_pbar(download_files['ConRebSeg.zip'], 'ConRebSeg.zip')
+    if not args.skip_selfcollected:
+        if not all([os.path.exists(x) for x in dataset.match_tags(['langebro', 
+                                                                'vester_sogade'])]):
+            download_with_pbar(download_files['ConRebSeg.zip'], 'ConRebSeg.zip')
 
     # Check integrity of langebro and vester_sogade samples
-    print('Checking integrity of langebro samples and vester_sogade samples...', end='')
-    lange_sogade = dataset.match_tags(['langebro', 'vester_sogade'])
- 
-    hashes = Parallel(n_jobs=-1, prefer='threads',
-                      verbose=11)(delayed(check_hash)(
-        sample.id, json.loads(sample.to_json())) for sample in lange_sogade
-        )
-        
-    hashes = pd.DataFrame.from_records(hashes, index='id')
-    assert (hashes['existing_hash'] == hashes['current_hash']).all(), print(hashes[~(hashes['existing_hash'] == hashes['current_hash'])])
-    print("PASS!")
+    if not args.skip_integrity_check:
+        print('Checking integrity of langebro samples and vester_sogade samples...', end='')
+        lange_sogade = dataset.match_tags(['langebro', 'vester_sogade'])
+    
+        hashes = Parallel(n_jobs=-1, prefer='threads',
+                        verbose=11)(delayed(check_hash)(
+            sample.id, json.loads(sample.to_json())) for sample in lange_sogade
+            )
+            
+        hashes = pd.DataFrame.from_records(hashes, index='id')
+        assert (hashes['existing_hash'] == hashes['current_hash']).all(), print(hashes[~(hashes['existing_hash'] == hashes['current_hash'])])
+        print("PASS!")
     
     # Create a list of youtube_ids:
     yt_ids = list(set(dataset.values('youtube_id')))
@@ -156,27 +164,28 @@ if __name__ == '__main__':
             if not os.path.isdir('.tmp'):
                 os.makedirs('.tmp')
 
-            with YoutubeDL(params={'format' : f'bv[height={height}]', 
-                                'outtmpl' : '%(id)s.%(ext)s',
-                                'paths' : {'home' : '.tmp/'}, 
-                                'simulate' : False}) as ydl:
-                ydl.download(f'https://www.youtube.com/watch?v={yt_id}')
+            if not args.skip_yt_download:
+                with YoutubeDL(params={'format' : f'bv[height={height}]', 
+                                    'outtmpl' : '%(id)s.%(ext)s',
+                                    'paths' : {'home' : '.tmp/'}, 
+                                    'simulate' : False}) as ydl:
+                    ydl.download(f'https://www.youtube.com/watch?v={yt_id}')
             
-            # Extract frames
-            video_file = glob.glob(os.path.join('.tmp', f'{yt_id}*'))[0]
-            extract_frames(video_file, frame_dir, step=frame_step)
+                # Extract frames
+                video_file = glob.glob(os.path.join('.tmp', f'{yt_id}*'))[0]
+                extract_frames(video_file, frame_dir, step=frame_step)
         else:
             print(f"Frames for Youtube ID {yt_id} already exist, skipping download")
         
-        # Check integrity
-        print(f"Checking integrity of {yt_id} frames...", end='')
-        hashes = [{'id': sample.id, 'filename' : sample.filename ,'existing_hash' : sample.file_hash.split(':')[1], 'current_hash' : fo.core.utils.compute_filehash(sample.filepath, 'md5')} for sample in sequence]
-        hashes = pd.DataFrame.from_records(hashes, index='id')
-        assert (hashes['existing_hash'] == hashes['current_hash']).all(), print(hashes[~(hashes['existing_hash'] == hashes['current_hash'])])
-        # assert all([sample.file_hash.split(':')[1] == fo.core.utils.compute_filehash(sample.filepath, 'md5') for sample in sequence])
-
-        print('PASS!')
-        
+        if not args.skip_integrity_check:
+            # Check integrity
+            print(f"Checking integrity of {yt_id} frames...", end='')
+            hashes = [{'id': sample.id, 'filename' : sample.filename ,'existing_hash' : sample.file_hash.split(':')[1], 'current_hash' : fo.core.utils.compute_filehash(sample.filepath, 'md5')} for sample in sequence]
+            hashes = pd.DataFrame.from_records(hashes, index='id')
+            assert (hashes['existing_hash'] == hashes['current_hash']).all(), print(hashes[~(hashes['existing_hash'] == hashes['current_hash'])])
+            # assert all([sample.file_hash.split(':')[1] == fo.core.utils.compute_filehash(sample.filepath, 'md5') for sample in sequence])
+            print('PASS!')
+    
         # Delete video
         # os.remove(video_file)
     # Delete temporary directory   

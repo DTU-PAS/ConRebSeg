@@ -120,8 +120,11 @@ if __name__ == '__main__':
             # Extract archive
             with ZipFile('ConRebSeg.zip', 'r') as zf:
                 for member in tqdm(zf.infolist()):
-                    zf.extract(member, member.filename.replace('ConRebSeg', 'data'))
-            os.remove('ConRebSeq.zip')
+                    zf.extract(member)
+            shutil.move('ConRebSeg/langebro', 'data/langebro')
+            shutil.move('ConRebSeg/vester_sogade', 'data/vester_sogade')
+            os.removedirs('ConRebSeg')
+            # os.remove('ConRebSeg.zip')
 
     # Check integrity of langebro and vester_sogade samples
     if not args.skip_integrity_check:

@@ -83,6 +83,15 @@ parser.add_argument('--dataset_dir', type=str, default='.',
 if __name__ == '__main__':
     args = parser.parse_args()
 
+    download_files = {
+        'ConRebSeg.zip': 'https://figshare.com/ndownloader/files/47543210?private_link=8f14ff87159f1e0f6f11', 
+        'metadata.json': 'https://figshare.com/ndownloader/files/47547509?private_link=8f14ff87159f1e0f6f11',
+        'samples.json' : 'https://figshare.com/ndownloader/files/47547512?private_link=8f14ff87159f1e0f6f11'
+    }
+    
+    download_with_pbar(download_files['metadata.json'], 'metadata.json')
+    download_with_pbar(download_files['samples.json'], 'samples.json')
+
     dataset = fo.Dataset.from_dir(
         dataset_dir = args.dataset_dir,
         dataset_type = fo.types.FiftyOneDataset,
@@ -90,12 +99,12 @@ if __name__ == '__main__':
     )
 
     print(dataset)
-        
+
     # Download langebro/vestersogade samples
     if not all([os.path.exists(x) for x in dataset.match_tags(['langebro', 
                                                                'vester_sogade'])]):
-        download_with_pbar('https://figshare.com/ndownloader/files/47543210?private_link=8f14ff87159f1e0f6f11', 'conrebseg_data.zip')
-        
+        download_with_pbar(download_files['ConRebSeg.zip'], 'ConRebSeg.zip')
+
     # Check integrity of langebro and vester_sogade samples
     print('Checking integrity of langebro samples and vester_sogade samples...', end='')
     lange_sogade = dataset.match_tags(['langebro', 'vester_sogade'])

@@ -97,7 +97,9 @@ if __name__ == '__main__':
         'samples.json' : 'https://figshare.com/ndownloader/files/47547512?private_link=8f14ff87159f1e0f6f11'
     }
     
+    print('Downloading metadata.json...')
     download_with_pbar(download_files['metadata.json'], 'metadata.json')
+    print('Downloading samples.json...')
     download_with_pbar(download_files['samples.json'], 'samples.json')
 
     dataset = fo.Dataset.from_dir(
@@ -110,8 +112,9 @@ if __name__ == '__main__':
 
     # Download langebro/vestersogade samples
     if not args.skip_selfcollected:
-        if not all([os.path.exists(x) for x in dataset.match_tags(['langebro', 
+        if not all([os.path.exists(x.filepath) for x in dataset.match_tags(['langebro', 
                                                                 'vester_sogade'])]):
+            print('Downloading ConRebSeg.zip...')
             download_with_pbar(download_files['ConRebSeg.zip'], 'ConRebSeg.zip')
             
             # Extract archive

@@ -7,10 +7,12 @@ import pandas as pd
 import numpy as np
 import json
 import requests
+import shutil
 
 from tqdm import tqdm
 from yt_dlp import YoutubeDL
 from joblib import Parallel, delayed
+from zipfile import ZipFile
 
 def download_with_pbar(url, filepath):
     """Downloads data from an URL using tqdm and requests
@@ -111,6 +113,12 @@ if __name__ == '__main__':
         if not all([os.path.exists(x) for x in dataset.match_tags(['langebro', 
                                                                 'vester_sogade'])]):
             download_with_pbar(download_files['ConRebSeg.zip'], 'ConRebSeg.zip')
+            
+            # Extract archive
+            with ZipFile('ConRebSeg.zip', 'r') as zf:
+                for member in tqdm(zf.infolist()):
+                    zf.extract(member, member.filename.replace('ConRebSeg', 'data'))
+            os.remove('ConRebSeq.zip')
 
     # Check integrity of langebro and vester_sogade samples
     if not args.skip_integrity_check:

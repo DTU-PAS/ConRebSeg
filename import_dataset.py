@@ -132,6 +132,7 @@ if __name__ == '__main__':
             name='ConRebSeg'
         )
     else:
+        dataset = fo.load_dataset('ConRebSeg')
         logger.info("ConRebSeg is already imported. Script will download missing data and do integrity check unless overridden by cmd args")
 
     # Download langebro/vestersogade samples

@@ -122,7 +122,7 @@ if __name__ == '__main__':
 
     # Read checksum file
     with open('checksums.md5', 'r') as f:
-        checksums = {x.split(' ')[-1].replace('/n', '') : x.split(' ')[0] for x in f.readlines()}
+        checksums = {x.split(' ')[-1].replace('\n', '') : x.split(' ')[0] for x in f.readlines()}
     
     # Check and download metadata.json
     redownload = False

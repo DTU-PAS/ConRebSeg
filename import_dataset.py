@@ -278,12 +278,12 @@ if __name__ == '__main__':
                 failed_integrity_check.append(
                     hashes[~(hashes['existing_hash'] == hashes['current_hash'])])
 
-        if len(failed_integrity_check) == 0:
-            logging.info("Import of ConRebSeg completed successfully without errors.")
-        else:
-            all_failed = pd.concat(failed_integrity_check, axis=0)
-            sequences = set([x.split('/')[-2] for x in all_failed['filepath']])
-            logging.warning("Import of ConRebSeg is completed, but integrity errors have been detected." +
-                         "Please check the following sequences and make sure the labels align with image contents:\n%s" % sequences)
+    if len(failed_integrity_check) == 0:
+        logging.info("Import of ConRebSeg completed successfully without errors.")
+    else:
+        all_failed = pd.concat(failed_integrity_check, axis=0)
+        sequences = set([x.split('/')[-2] for x in all_failed['filepath']])
+        logging.warning("Import of ConRebSeg is completed, but integrity errors have been detected." +
+                        "Please check the following sequences and make sure the labels align with image contents:\n%s" % sequences)
 
     dataset.persistent = True

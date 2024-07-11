@@ -179,7 +179,7 @@ if __name__ == '__main__':
                 os.makedirs('.tmp')
 
             if not args.skip_yt_download:
-                with YoutubeDL(params={'format' : f'bv[height={height}]', 
+                with YoutubeDL(params={'format' : f'bv[height={height}][ext=mp4]', 
                                     'outtmpl' : '%(id)s.%(ext)s',
                                     'paths' : {'home' : '.tmp/'}, 
                                     'simulate' : False}) as ydl:

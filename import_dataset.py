@@ -9,6 +9,7 @@ import json
 import requests
 import shutil
 import logging
+import hashlib
 
 from tqdm import tqdm
 from yt_dlp import YoutubeDL
@@ -118,12 +119,40 @@ if __name__ == '__main__':
         'metadata.json': 'https://figshare.com/ndownloader/files/47547509?private_link=8f14ff87159f1e0f6f11',
         'samples.json' : 'https://figshare.com/ndownloader/files/47547512?private_link=8f14ff87159f1e0f6f11'
     }
-    
-    logger.info('Downloading metadata.json')
-    download_with_pbar(download_files['metadata.json'], 'metadata.json')
-    logger.info('Downloading samples.json...')
-    download_with_pbar(download_files['samples.json'], 'samples.json')
 
+    # Read checksum file
+    with open('checksums.md5', 'r') as f:
+        checksums = {x.split(' ')[-1].replace('/n', '') : x.split[0] for x in f.readlines()}
+    
+    # Check and download metadata.json
+    redownload = False
+    if os.path.exists('metadata.json'):
+        with open('metadata.json', 'rb') as f:
+            redownload = hashlib.file_digest(f, 'md5').hexdigest() != checksums['metadata.json']
+            if not redownload:
+                logging.info("Not downloading metadata.json, as it already exists and is up-to-date")
+    elif redownload or not os.path.exists('metadata.json'):
+        logging.info('Downloading metadata.json')
+        download_with_pbar(download_files['metadata.json'], 'metadata.json')
+        with open('metadata.json', 'rb') as f:
+            assert hashlib.file_digest(f, 'md5').hexdigest() == checksums['metadata.json'], "Something is wrong with metadata.json"
+        logging.info("Download of metadata.json completed and integrity check passed.")
+    
+    # Check and download samples.json
+    redownload = False
+    if os.path.exists('samples.json'):
+        with open('samples.json', 'rb') as f:
+            redownload = hashlib.file_digest(f, 'md5').hexdigest() != checksums['samples.json']
+            if not redownload:
+                logging.info("Not downloading samples.json, as it already exists and is up-to-date")
+    elif redownload or not os.path.exists('samples.json'):
+        logging.info('Downloading samples.json')
+        download_with_pbar(download_files['samples.json'], 'samples.json')
+        with open('samples.json', 'rb') as f:
+            assert hashlib.file_digest(f, 'md5').hexdigest() == checksums['samples.json'], "Something is wrong with samples.json"
+        logging.info("Download of samples.json completed and integrity check passed.")
+
+    # Import/Load ConRebSeg FiftyOne dataset
     if not fo.dataset_exists('ConRebSeg'):
         logger.info("Importing FiftyOne Dataset metadata")
         dataset = fo.Dataset.from_dir(
@@ -133,17 +162,25 @@ if __name__ == '__main__':
         )
     else:
         dataset = fo.load_dataset('ConRebSeg')
-        logger.info("ConRebSeg is already imported. Script will download missing data and do integrity check unless overridden by cmd args")
+        logging.info("ConRebSeg is already imported. Script will download missing data and do integrity check unless overridden by cmd args")
 
     # Download langebro/vestersogade samples
     if not args.skip_selfcollected:
-        
         logging.info("Checking if all self-collected images are stored on disk")
         if not all([os.path.exists(x.filepath) for x in dataset.match_tags(['langebro', 
                                                                 'vester_sogade'])]):
-            if not os.path.exists('ConRebSeg.zip'):
+            redownload = False
+            if os.path.exists('ConRebSeg.zip'):
+                logging.info('ConRebSeg.zip already downloaded, checking integrity. This might take a while.')
+                with open('ConRebSeg.zip', 'rb') as f:
+                    redownload = hashlib.file_digest(f, 'md5').hexdigest() != checksums['ConRebSeg.zip']
+            elif redownload or not os.path.exists('ConRebSeg.zip'):
                 logging.info('ZIP archive with samples not found, downloading ConRebSeg.zip')
                 download_with_pbar(download_files['ConRebSeg.zip'], 'ConRebSeg.zip')
+                logging.info("Checking integrity of downloaded archive. This might take a while")
+                with open('ConRebSeg.zip', 'rb') as f:
+                    assert hashlib.file_digest(f, 'md5').hexdigest()  == checksums['ConRebSeg.zip']
+
             
             # Extract archive
             logging.info("Extracting ConRebSeg.zip")

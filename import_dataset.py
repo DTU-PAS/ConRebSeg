@@ -91,7 +91,7 @@ def check_hash(sid, sample_dict):
     """
     return {
         'id' : sid, 
-        'filename': os.path.split(sample_dict['filepath'][1]), 
+        'filepath': sample_dict['filepath'], 
         'existing_hash' : sample_dict['file_hash'].split('md5:')[1],
         'current_hash' : fo.core.utils.compute_filehash(sample_dict['filepath'], 
                                                         'md5')
@@ -266,11 +266,8 @@ if __name__ == '__main__':
         if not args.skip_integrity_check:
             # Check integrity
             logging.info("Checking integrity of %s frames", yt_id)
-            hashes = [{'id': sample.id,
-                       'filename' : sample.filename,
-                       'existing_hash' : sample.file_hash.split(':')[1],
-                        'current_hash' : fo.core.utils.compute_filehash(
-                            sample.filepath, 'md5')} for sample in sequence]
+            hashes = [check_hash(sample.id, json.loads(sample.to_json()))
+                      for sample in sequence]
             hashes = pd.DataFrame.from_records(hashes, index='id')
             if (hashes['existing_hash'] == hashes['current_hash']).all():
                 logging.info('Result integrity check of %s: PASS!', yt_id)
@@ -285,7 +282,7 @@ if __name__ == '__main__':
             logging.info("Import of ConRebSeg completed successfully without errors.")
         else:
             all_failed = pd.concat(failed_integrity_check, axis=0)
-            sequences = set([x.split('/')[-2] for x in all_failed['filename']])
+            sequences = set([x.split('/')[-2] for x in all_failed['filepath']])
             logging.warning("Import of ConRebSeg is completed, but integrity errors have been detected." +
                          "Please check the following sequences and make sure the labels align with image contents:\n%s" % sequences)
 

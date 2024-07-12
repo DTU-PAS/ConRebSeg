@@ -189,6 +189,7 @@ if __name__ == '__main__':
                     zf.extract(member)
             shutil.move('ConRebSeg/langebro', 'data/langebro')
             shutil.move('ConRebSeg/vester_sogade', 'data/vester_sogade')
+            os.remove('ConRebSeg/README.txt')
             os.removedirs('ConRebSeg')
             # os.remove('ConRebSeg.zip')
 

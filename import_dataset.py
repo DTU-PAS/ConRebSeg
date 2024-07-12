@@ -107,17 +107,17 @@ parser.add_argument('--skip_yt_download', action='store_true',
 parser.add_argument('--skip_selfcollected', action='store_true',
                     help='do not download langebro and vester sogade data')
 
-logger = logging.getLogger(__name__)
 
 if __name__ == '__main__':
+    logger = logging.getLogger(__name__)
     args = parser.parse_args()
     failed_integrity_check = []
     logging.basicConfig(level=logging.INFO)
 
     download_files = {
-        'ConRebSeg.zip': 'https://figshare.com/ndownloader/files/47543210?private_link=8f14ff87159f1e0f6f11', 
-        'metadata.json': 'https://figshare.com/ndownloader/files/47547509?private_link=8f14ff87159f1e0f6f11',
-        'samples.json' : 'https://figshare.com/ndownloader/files/47547512?private_link=8f14ff87159f1e0f6f11'
+        'ConRebSeg.zip': 'https://data.dtu.dk/ndownloader/files/47628286', 
+        'metadata.json': 'https://data.dtu.dk/ndownloader/files/47627011',
+        'samples.json' : 'https://data.dtu.dk/ndownloader/files/47627014'
     }
 
     # Read checksum file
@@ -130,13 +130,13 @@ if __name__ == '__main__':
         with open('metadata.json', 'rb') as f:
             redownload = hashlib.file_digest(f, 'md5').hexdigest() != checksums['metadata.json']
             if not redownload:
-                logging.info("Not downloading metadata.json, as it already exists and is up-to-date")
+                logger.info("Not downloading metadata.json, as it already exists and is up-to-date")
     elif redownload or not os.path.exists('metadata.json'):
-        logging.info('Downloading metadata.json')
+        logger.info('Downloading metadata.json')
         download_with_pbar(download_files['metadata.json'], 'metadata.json')
         with open('metadata.json', 'rb') as f:
             assert hashlib.file_digest(f, 'md5').hexdigest() == checksums['metadata.json'], "Something is wrong with metadata.json"
-        logging.info("Download of metadata.json completed and integrity check passed.")
+        logger.info("Download of metadata.json completed and integrity check passed.")
     
     # Check and download samples.json
     redownload = False
@@ -144,13 +144,13 @@ if __name__ == '__main__':
         with open('samples.json', 'rb') as f:
             redownload = hashlib.file_digest(f, 'md5').hexdigest() != checksums['samples.json']
             if not redownload:
-                logging.info("Not downloading samples.json, as it already exists and is up-to-date")
+                logger.info("Not downloading samples.json, as it already exists and is up-to-date")
     elif redownload or not os.path.exists('samples.json'):
-        logging.info('Downloading samples.json')
+        logger.info('Downloading samples.json')
         download_with_pbar(download_files['samples.json'], 'samples.json')
         with open('samples.json', 'rb') as f:
             assert hashlib.file_digest(f, 'md5').hexdigest() == checksums['samples.json'], "Something is wrong with samples.json"
-        logging.info("Download of samples.json completed and integrity check passed.")
+        logger.info("Download of samples.json completed and integrity check passed.")
 
     # Import/Load ConRebSeg FiftyOne dataset
     if not fo.dataset_exists('ConRebSeg'):
@@ -162,28 +162,28 @@ if __name__ == '__main__':
         )
     else:
         dataset = fo.load_dataset('ConRebSeg')
-        logging.info("ConRebSeg is already imported. Script will download missing data and do integrity check unless overridden by cmd args")
+        logger.info("ConRebSeg is already imported. Script will download missing data and do integrity check unless overridden by cmd args")
 
     # Download langebro/vestersogade samples
     if not args.skip_selfcollected:
-        logging.info("Checking if all self-collected images are stored on disk")
+        logger.info("Checking if all self-collected images are stored on disk")
         if not all([os.path.exists(x.filepath) for x in dataset.match_tags(['langebro', 
                                                                 'vester_sogade'])]):
             redownload = False
             if os.path.exists('ConRebSeg.zip'):
-                logging.info('ConRebSeg.zip already downloaded, checking integrity. This might take a while.')
+                logger.info('ConRebSeg.zip already downloaded, checking integrity. This might take a while.')
                 with open('ConRebSeg.zip', 'rb') as f:
                     redownload = hashlib.file_digest(f, 'md5').hexdigest() != checksums['ConRebSeg.zip']
             elif redownload or not os.path.exists('ConRebSeg.zip'):
-                logging.info('ZIP archive with samples not found, downloading ConRebSeg.zip')
+                logger.info('ZIP archive with samples not found, downloading ConRebSeg.zip')
                 download_with_pbar(download_files['ConRebSeg.zip'], 'ConRebSeg.zip')
-                logging.info("Checking integrity of downloaded archive. This might take a while")
+                logger.info("Checking integrity of downloaded archive. This might take a while")
                 with open('ConRebSeg.zip', 'rb') as f:
                     assert hashlib.file_digest(f, 'md5').hexdigest()  == checksums['ConRebSeg.zip']
 
             
             # Extract archive
-            logging.info("Extracting ConRebSeg.zip")
+            logger.info("Extracting ConRebSeg.zip")
             with ZipFile('ConRebSeg.zip', 'r') as zf:
                 for member in tqdm(zf.infolist()):
                     zf.extract(member)
@@ -194,19 +194,19 @@ if __name__ == '__main__':
 
     # Check integrity of langebro and vester_sogade samples
     if not args.skip_integrity_check:
-        logging.info('Checking integrity of langebro samples and vester_sogade samples')
+        logger.info('Checking integrity of langebro samples and vester_sogade samples')
         lange_sogade = dataset.match_tags(['langebro', 'vester_sogade'])
     
         hashes = Parallel(n_jobs=-1, prefer='threads',
-                        verbose=11)(delayed(check_hash)(
+                        verbose=1)(delayed(check_hash)(
             sample.id, json.loads(sample.to_json())) for sample in lange_sogade
             )
             
         hashes = pd.DataFrame.from_records(hashes, index='id')
         if (hashes['existing_hash'] == hashes['current_hash']).all():
-            logging.info("Integrity check langebro and vester_sogade PASSED!")
+            logger.info("Integrity check langebro and vester_sogade PASSED!")
         else:
-            logging.warning("Integrity check langebro and vester_sogade FAILED!\n"+
+            logger.warning("Integrity check langebro and vester_sogade FAILED!\n"+
                             'Check the summary at the end for a list of' +
                             ' sequences that need attention')
             failed_integrity_check.append(
@@ -216,74 +216,81 @@ if __name__ == '__main__':
     yt_ids = list(set(dataset.values('youtube_id')))
     yt_ids.remove(None)
     yt_ids = sorted(yt_ids)
-    print(yt_ids)
 
-    # Loop through the IDs and download the video
-    for yt_id in yt_ids:
-        print(yt_id)
-        sequence = dataset.match(fo.ViewField('youtube_id') == yt_id)
-        
-        # Check if exists
-        filepaths = sequence.values('filepath')
-        if not all([os.path.exists(filepath) for filepath in filepaths]):
-
-            # Extract video height to get quality
-            height = set(sequence.values('metadata.height'))
-            assert len(height) == 1, 'Inconsistent frame size'
-            height = list(height)[0]
-
-            # Extract frame step
-            frame_step = np.unique(np.diff(sorted(sequence.values('frame_num'))))
+    if not args.skip_yt_download:
+        # Loop through the IDs and download the video
+        for yt_id in yt_ids:
+            sequence = dataset.match(fo.ViewField('youtube_id') == yt_id)
             
-            # Cefw94KfuI0 has no frame 200 - that's intended
-            assert len(frame_step) == 1 or yt_id == 'Cefw94KfuI0', 'Inconsistent frame_step'
-            frame_step = list(frame_step)[0]
+            # Check if exists
+            filepaths = sequence.values('filepath')
+            if not all([os.path.exists(filepath) for filepath in filepaths]):
 
-            # Extract directory
-            frame_dir = set([
-                os.path.split(x)[0] for x in sequence.values('filepath')
-                ])
-            assert len(frame_dir) == 1
-            frame_dir = list(frame_dir)[0]
+                # Extract video height to get quality
+                height = set(sequence.values('metadata.height'))
+                assert len(height) == 1, 'Inconsistent frame size'
+                height = list(height)[0]
 
-            # Create temporary directory to download videos and delete them again
-            if not os.path.isdir('.tmp'):
-                os.makedirs('.tmp')
+                # Extract frame step
+                frame_step = np.unique(np.diff(sorted(sequence.values('frame_num'))))
+                
+                # Cefw94KfuI0 has no frame 200 - that's intended
+                assert len(frame_step) == 1 or yt_id == 'Cefw94KfuI0', 'Inconsistent frame_step'
+                frame_step = list(frame_step)[0]
 
-            if not args.skip_yt_download:
+                # Extract directory
+                frame_dir = set([
+                    os.path.split(x)[0] for x in sequence.values('filepath')
+                    ])
+                assert len(frame_dir) == 1
+                frame_dir = list(frame_dir)[0]
+
+                # Create temporary directory to download videos and delete them again
+                if not os.path.isdir('.tmp'):
+                    os.makedirs('.tmp')
+                
+                # Download video
                 with YoutubeDL(params={'format' : f'bv[height={height}][ext=mp4]', 
-                                    'outtmpl' : '%(id)s.%(ext)s',
-                                    'paths' : {'home' : '.tmp/'}, 
-                                    'simulate' : False}) as ydl:
+                                        'outtmpl' : '%(id)s.%(ext)s',
+                                        'paths' : {'home' : '.tmp/'}, 
+                                        'simulate' : False}) as ydl:
                     ydl.download(f'https://www.youtube.com/watch?v={yt_id}')
 
-                # Extract frames
-                video_file = glob.glob(os.path.join('.tmp', f'{yt_id}*'))[0]
-                extract_frames(video_file, frame_dir, step=frame_step)
-        else:
-            logging.info("Frames for Youtube ID %s already exist, skipping download", yt_id)
+                    # Extract frames
+                    video_file = glob.glob(os.path.join('.tmp', f'{yt_id}*'))[0]
+                    extract_frames(video_file, frame_dir, step=frame_step)
+            else:
+                logger.info("Frames for Youtube ID %s already exist, skipping download", yt_id)
+    else:
+        logger.warning('Download for YouTube videos is deactivated. Skipping.')
         
+    for yt_id in yt_ids:
         if not args.skip_integrity_check:
             # Check integrity
-            logging.info("Checking integrity of %s frames", yt_id)
+            sequence = dataset.match(fo.ViewField('youtube_id') == yt_id)
+            logger.info("Checking integrity of %s frames", yt_id)
             hashes = [check_hash(sample.id, json.loads(sample.to_json()))
-                      for sample in sequence]
+                        for sample in sequence]
             hashes = pd.DataFrame.from_records(hashes, index='id')
             if (hashes['existing_hash'] == hashes['current_hash']).all():
-                logging.info('Result integrity check of %s: PASS!', yt_id)
+                logger.info('Result integrity check of %s: PASS!', yt_id)
             else:
-                logging.warning('Result integrity check of %s: FAILED!\n' +
-                             'Check the summary at the end for a list of' +
-                             ' sequences that need attention', yt_id)
+                logger.warning('Result integrity check of %s: FAILED!\n' +
+                                'Check the summary at the end for a list of' +
+                                ' sequences that need attention', yt_id)
                 failed_integrity_check.append(
                     hashes[~(hashes['existing_hash'] == hashes['current_hash'])])
+        else:
+            logger.warning('Integrity check for YouTube videos is deactivated. Skipping.')
 
     if len(failed_integrity_check) == 0:
-        logging.info("Import of ConRebSeg completed successfully without errors.")
+        logger.info("Import of ConRebSeg completed successfully without errors.")
     else:
         all_failed = pd.concat(failed_integrity_check, axis=0)
         sequences = set([x.split('/')[-2] for x in all_failed['filepath']])
-        logging.warning("Import of ConRebSeg is completed, but integrity errors have been detected." +
+        dataset.save_view('failed_integrity_check', dataset[all_failed.index])
+        logger.warning("Import of ConRebSeg is completed, but integrity errors have been detected." +
                         "Please check the following sequences and make sure the labels align with image contents:\n%s" % sequences)
+        logger.info('For your convenience, you can view all affected samples in the FiftyOne App (fiftyone app launch) by selecting the saved view \'failed_integrity_check\' in the upper left hand corner.')
 
     dataset.persistent = True

@@ -115,7 +115,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
 
     download_files = {
-        'ConRebSeg.zip': 'https://data.dtu.dk/ndownloader/files/47628286', 
+        'ConRebSeg.zip': 'https://data.dtu.dk/ndownloader/files/47836036', 
         'metadata.json': 'https://data.dtu.dk/ndownloader/files/47627011',
         'samples.json' : 'https://data.dtu.dk/ndownloader/files/47627014'
     }

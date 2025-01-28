@@ -39,7 +39,7 @@ To initialize the FiftyOne dataset and to download the data, please follow these
    This will open a browser window and present you with the dataset explorer. Happy exploring!
 
 ## Further information
-Further information about this dataset, its structure and characteristics can be found in the accompanying article on arXiv: [[2407.09372] ConRebSeg: A Segmentation Dataset for Reinforced Concrete Construction](https://arxiv.org/abs/2407.09372).
+Further information about this dataset, its structure and characteristics can be found in the accompanying article on arXiv: [[2407.09372] Segmentation Dataset for Reinforced Concrete Construction](https://arxiv.org/abs/2407.09372).
 
 ## Contributors
 Thanks to [Rasmus E. Andersen](https://scholar.google.com/citations?user=CxGlLlAAAAAJ&hl=en), Javier Casas Lorenzo and Carlos Gascon Bononad for helping me in the collection process! Thanks to Christiansen \& Essenbæk A/S for organizing access to the construction sites.

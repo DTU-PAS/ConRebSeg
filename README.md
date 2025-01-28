@@ -47,10 +47,10 @@ Thanks to [Rasmus E. Andersen](https://scholar.google.com/citations?user=CxGlLlA
 ## Citation
 If you found this dataset and the article/paper useful, please cite us as follows:
 ```
-@misc{schmidt2024conrebsegsegmentationdatasetreinforced,
-      title={ConRebSeg: A Segmentation Dataset for Reinforced Concrete Construction}, 
+@misc{schmidt2025segmentationdatasetreinforcedconcrete,
+      title={Segmentation Dataset for Reinforced Concrete Construction}, 
       author={Patrick Schmidt and Lazaros Nalpantidis},
-      year={2024},
+      year={2025},
       eprint={2407.09372},
       archivePrefix={arXiv},
       primaryClass={cs.CV},

@@ -39,7 +39,7 @@ To initialize the FiftyOne dataset and to download the data, please follow these
    This will open a browser window and present you with the dataset explorer. Happy exploring!
 
 ## Further information
-Further information about this dataset, its structure and characteristics can be found in the accompanying article on arXiv: [[2407.09372] Segmentation Dataset for Reinforced Concrete Construction](https://arxiv.org/abs/2407.09372).
+Further information about this dataset, its structure and characteristics can be found in the accompanying journal article [Segmentation dataset for reinforced concrete construction - ScienceDirect](https://doi.org/10.1016/j.autcon.2025.105990)
 
 ## Contributors
 Thanks to [Rasmus E. Andersen](https://scholar.google.com/citations?user=CxGlLlAAAAAJ&hl=en), Javier Casas Lorenzo and Carlos Gascon Bononad for helping me in the collection process! Thanks to Christiansen \& Essenbæk A/S for organizing access to the construction sites.
@@ -47,14 +47,17 @@ Thanks to [Rasmus E. Andersen](https://scholar.google.com/citations?user=CxGlLlA
 ## Citation
 If you found this dataset and the article/paper useful, please cite us as follows:
 ```
-@misc{schmidt2025segmentationdatasetreinforcedconcrete,
-      title={Segmentation Dataset for Reinforced Concrete Construction}, 
-      author={Patrick Schmidt and Lazaros Nalpantidis},
-      year={2025},
-      eprint={2407.09372},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV},
-      url={https://arxiv.org/abs/2407.09372}, 
+@article{SCHMIDT2025105990,
+title = {Segmentation dataset for reinforced concrete construction},
+journal = {Automation in Construction},
+volume = {171},
+pages = {105990},
+year = {2025},
+issn = {0926-5805},
+doi = {https://doi.org/10.1016/j.autcon.2025.105990},
+url = {https://www.sciencedirect.com/science/article/pii/S0926580525000305},
+author = {Patrick Schmidt and Lazaros Nalpantidis},
+keywords = {Dataset, Construction robotics, Segmentation, Rebar detection, Shotcrete, Digitization}
 }
 ```
 
